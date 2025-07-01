@@ -1,103 +1,146 @@
-import Image from "next/image";
+"use client";
+
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Sun, Moon } from "lucide-react";
+const initialBoard = Array(9).fill(null);
 
 export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm/6 text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+  const [board, setBoard] = useState<(string | null)[]>(initialBoard);
+  const [xIsNext, setXIsNext] = useState(true);
+  const [scores, setScores] = useState({ P1: 0, P2: 0, draw: 0 });
+  const [startingPlayer, setStartingPlayer] = useState<"P1" | "P2">("P1");
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+  const winner = calculateWinner(board);
+  const isDraw = !winner && board.every((cell) => cell !== null);
+
+  const handleClick = (index: number) => {
+    if (board[index] || winner) return;
+
+    const newBoard = [...board];
+    newBoard[index] = xIsNext ? "P1" : "P2";
+    setBoard(newBoard);
+
+    const newWinner = calculateWinner(newBoard);
+    if (newWinner) {
+      setScores((prev) => ({
+        ...prev,
+        [newWinner]: prev[newWinner as "P1" | "P2"] + 1,
+      }));
+      setStartingPlayer((prev) => (prev === "P1" ? "P2" : "P1"));
+    } else if (newBoard.every((cell) => cell !== null)) {
+      setScores((prev) => ({ ...prev, draw: prev.draw + 1 }));
+      setStartingPlayer((prev) => (prev === "P1" ? "P2" : "P1"));
+    } else {
+      setXIsNext(!xIsNext);
+    }
+  };
+
+  const handleNewGame = () => {
+    setBoard(initialBoard);
+    setXIsNext(startingPlayer === "P1");
+  };
+
+  const handleResetAll = () => {
+    handleNewGame();
+    setScores({ P1: 0, P2: 0, draw: 0 });
+  };
+
+  return (
+    <main className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-b from-blue-50 to-pink-50 p-4">
+      <h1 className="text-4xl font-bold mb-2">Tic-Tac-Toe</h1>
+      <p className="mb-8 text-lg text-gray-600"></p>
+
+      <div className="flex flex-col md:flex-row gap-8 items-center">
+        {/* Game Board */}
+        <div className="grid grid-cols-3 gap-2 bg-white p-4 rounded-2xl shadow-lg">
+          {board.map((cell, i) => (
+            <Button
+              key={i}
+              className="w-24 h-24 text-2xl font-bold"
+              variant="outline"
+              onClick={() => handleClick(i)}
+            >
+              {cell == "P1" && <Sun className="w-16 h-16 text-yellow-500" />}
+              {cell == "P2" && <Moon className="w-16 h-16 text-blue-500" />}
+            </Button>
+          ))}
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
+
+        {/* Side Panel */}
+        <div className="flex flex-col gap-4">
+          <div className="bg-white p-4 rounded-2xl shadow text-center">
+            <p className="text-lg font-semibold">
+              {winner
+                ? `Winner: ${winner === "P1" ? "🌞 Sun" : "🌙 Moon"}`
+                : isDraw
+                ? "Draw!"
+                : `Player ${xIsNext ? "🌞" : "🌙"}'s turn`}
+            </p>
+          </div>
+
+          <div className="bg-white p-6 rounded-2xl shadow text-center w-64 h-48">
+            <p className="text-lg font-bold mb-4">Score Board</p>
+            <div className="flex justify-around">
+              <div>
+                <p className="text-yellow-500 border border-yellow-500 rounded-full px-2">
+                  Sun
+                </p>
+                <p className="text-xl">{scores.P1}</p>
+              </div>
+              <div>
+                <p className="text-gray-500 border border-gray-500 rounded-full px-2">
+                  Draws
+                </p>
+                <p className="text-xl">{scores.draw}</p>
+              </div>
+              <div>
+                <p className="text-blue-500 border border-blue-500 rounded-full px-2">
+                  Moon
+                </p>
+                <p className="text-xl">{scores.P2}</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex gap-2">
+            <Button onClick={handleNewGame} className="flex-1">
+              New Game
+            </Button>
+            <Button
+              onClick={handleResetAll}
+              variant="outline"
+              className="flex-1"
+            >
+              Reset All
+            </Button>
+          </div>
+        </div>
+      </div>
+
+      <p className="mt-8 text-sm text-gray-500">
+        Built with React 19, Next.js 15, Tailwind CSS, and shadcn/ui
+      </p>
+    </main>
   );
+}
+
+// Winner calculation helper
+function calculateWinner(board: (string | null)[]) {
+  const lines = [
+    [0, 1, 2],
+    [3, 4, 5],
+    [6, 7, 8],
+    [0, 3, 6],
+    [1, 4, 7],
+    [2, 5, 8],
+    [0, 4, 8],
+    [2, 4, 6],
+  ];
+  for (let [a, b, c] of lines) {
+    if (board[a] && board[a] === board[b] && board[a] === board[c]) {
+      return board[a];
+    }
+  }
+  return null;
 }
