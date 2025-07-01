@@ -19,6 +19,7 @@ export default function Home() {
   const [scores, setScores] = useState({ P1: 0, P2: 0, draw: 0 });
   const [startingPlayer, setStartingPlayer] = useState<"P1" | "P2">("P1");
   const [showResult, setShowResult] = useState(false);
+  const [round, setRound] = useState(1);
 
   const winner = calculateWinner(board);
   const isDraw = !winner && board.every((cell) => cell !== null);
@@ -39,10 +40,12 @@ export default function Home() {
       }));
       setStartingPlayer((prev) => (prev === "P1" ? "P2" : "P1"));
       setShowResult(true);
+      setRound(prev => prev + 1); 
     } else if (newBoard.every((cell) => cell !== null)) {
       setScores((prev) => ({ ...prev, draw: prev.draw + 1 }));
       setStartingPlayer((prev) => (prev === "P1" ? "P2" : "P1"));
       setShowResult(true);
+      setRound(prev => prev + 1); 
     } else {
       setXIsNext(!xIsNext);
     }
@@ -56,6 +59,7 @@ export default function Home() {
   const handleResetAll = () => {
     handleNewGame();
     setScores({ P1: 0, P2: 0, draw: 0 });
+    setRound(1);
   };
 
   return (
@@ -80,8 +84,8 @@ export default function Home() {
                   )}
                   <span className="text-lg">
                     {winner === "P1"
-                      ? " Sun shines bright!"
-                      : " Moon takes over!"}
+                      ? "Sun shines bright!"
+                      : "Moon takes over!"}
                   </span>
                 </div>
               ) : (
@@ -102,64 +106,70 @@ export default function Home() {
               onClick={() => {
                 setShowResult(false);
                 handleNewGame();
-              }}>
+              }}
+            >
               Play Again
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      <h1 className="text-4xl font-bold mb-2">Tic-Tac-Toe</h1>
-      <p className="mb-8 text-lg text-gray-600"></p>
+      <h1 className="text-4xl font-bold mb-1"> Tic-Tac-Toe</h1>
+      <p className="text-sm text-gray-500 mb-2">Sun vs Moon — who will win?</p>
+      <p className="text-xs mb-6 text-gray-400">Round {round}</p>
 
       <div className="flex flex-col md:flex-row gap-8 items-center">
-        {/* Game Board */}
-        <div className="grid grid-cols-3 gap-2 bg-white p-4 rounded-2xl shadow-lg">
+        <div className="grid grid-cols-3 gap-2 bg-white p-4 rounded-xl shadow-sm">
           {board.map((cell, i) => (
             <Button
               key={i}
-              className="w-24 h-24 text-2xl font-bold"
-              variant="outline"
+              className="w-24 h-24 text-2xl font-bold border border-gray-300 hover:bg-gray-100 rounded-lg"
+              variant="ghost"
               onClick={() => handleClick(i)}
             >
-              {cell == "P1" && <Sun className="w-16 h-16 text-yellow-500" />}
-              {cell == "P2" && <Moon className="w-16 h-16 text-blue-500" />}
+              {cell === "P1" && <Sun className="w-16 h-16 text-yellow-500" />}
+              {cell === "P2" && <Moon className="w-16 h-16 text-blue-500" />}
             </Button>
           ))}
         </div>
 
-        {/* Side Panel */}
         <div className="flex flex-col gap-4">
-          <div className="bg-white p-4 rounded-2xl shadow text-center">
-            <p className="text-lg font-semibold">
+          <div className="bg-white p-4 rounded-xl shadow-sm text-center">
+            <p className="text-lg font-semibold text-gray-700">
               {winner
                 ? `Winner: ${winner === "P1" ? "🌞 Sun" : "🌙 Moon"}`
                 : isDraw
                 ? "Draw!"
-                : `Player ${xIsNext ? "🌞" : "🌙"}'s turn`}
+                : `${xIsNext ? "🌞 Sun" : "🌙 Moon"}'s turn`}
             </p>
           </div>
 
-          <div className="bg-white p-6 rounded-2xl shadow text-center w-64 h-48">
-            <p className="text-lg font-bold mb-4">Score Board</p>
+          <div className="bg-white p-6 rounded-xl shadow-sm text-center w-72">
+            <p className="text-lg font-semibold mb-6">Score Board</p>
             <div className="flex justify-around">
-              <div>
-                <p className="text-yellow-500 border border-yellow-500 rounded-full px-2">
-                  Sun
+              <div className="flex flex-col items-center">
+                <p className="text-sm text-gray-700 bg-gray-100 rounded-full px-3 py-1">
+                  🌞 Sun
                 </p>
-                <p className="text-xl">{scores.P1}</p>
+                <p className="text-3xl font-extrabold text-yellow-500 bg-yellow-100 rounded-lg px-3 py-1 mt-2 shadow-md">
+                  {scores.P1}
+                </p>
               </div>
-              <div>
-                <p className="text-gray-500 border border-gray-500 rounded-full px-2">
-                  Draws
+              <div className="flex flex-col items-center">
+                <p className="text-sm text-gray-700 bg-gray-100 rounded-full px-3 py-1">
+                  🤝 Draws
                 </p>
-                <p className="text-xl">{scores.draw}</p>
+                <p className="text-3xl font-extrabold text-gray-600 bg-gray-100 rounded-lg px-3 py-1 mt-2 shadow-md">
+                  {scores.draw}
+                </p>
               </div>
-              <div>
-                <p className="text-blue-500 border border-blue-500 rounded-full px-2">
-                  Moon
+              <div className="flex flex-col items-center">
+                <p className="text-sm text-gray-700 bg-gray-100 rounded-full px-3 py-1">
+                  🌙 Moon
                 </p>
-                <p className="text-xl">{scores.P2}</p>
+                <p className="text-3xl font-extrabold text-blue-500 bg-blue-100 rounded-lg px-3 py-1 mt-2 shadow-md">
+                  {scores.P2}
+                </p>
               </div>
             </div>
           </div>
@@ -183,7 +193,6 @@ export default function Home() {
   );
 }
 
-// Winner calculation helper
 function calculateWinner(board: (string | null)[]) {
   const lines = [
     [0, 1, 2],
